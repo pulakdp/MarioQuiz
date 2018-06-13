@@ -79,8 +79,6 @@ public class GameActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         if (getSupportActionBar() != null)
@@ -89,6 +87,10 @@ public class GameActivity extends AppCompatActivity {
         initViews();
 
         fetchQuestions();
+
+        layout.setOnClickListener(view -> {
+            userClicked();
+        });
 
         retry.setOnClickListener(view -> {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -109,6 +111,23 @@ public class GameActivity extends AppCompatActivity {
             start();
         });
         quit.setOnClickListener(view -> finish());
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        initialPos1 = (int) pipe1.getX();
+        initialPos2 = (int) pipe2.getX();
+        initialPos3 = (int) pipe3.getX();
+        initialPos4 = (int) pipe4.getX();
+
+        mario.setX(pipe1.getWidth() / 2 - mario.getWidth() / 2);
+        marioInitialPosX = (int) mario.getX();
+        marioInitialPosY = (int) mario.getY();
     }
 
     private void initViews() {
@@ -196,30 +215,6 @@ public class GameActivity extends AppCompatActivity {
             rightPipe = -1;
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (!hasFocus)
-            return;
-
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        initialPos1 = (int) pipe1.getX();
-        initialPos2 = (int) pipe2.getX();
-        initialPos3 = (int) pipe3.getX();
-        initialPos4 = (int) pipe4.getX();
-
-        mario.setX(pipe1.getWidth() / 2 - mario.getWidth() / 2);
-        marioInitialPosX = (int) mario.getX();
-        marioInitialPosY = (int) mario.getY();
-        layout.setOnClickListener(view -> {
-            userClicked();
-        });
-    }
-
     public void userClicked() {
         if (jumpsMade < 3 && onPipe) {
             onPipe = false;
@@ -291,7 +286,6 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void shiftWorldAndLoadNextQuestion(int rightPipe) {
-        Log.d(LOG_TAG, "Rightpipe: " + rightPipe);
         layout.setOnClickListener(null);
         Handler handler = new Handler();
         Runnable runnable = new Runnable() {
