@@ -79,8 +79,8 @@ public class GameActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_IMMERSIVE);
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
 
@@ -235,7 +235,7 @@ public class GameActivity extends AppCompatActivity {
                 mario.setY(mario.getY() + speedY);
 
                 for (int i = 1; i < 4; i++) {
-                    if (marioInitialPosX + (i * pipe1.getWidth()) == (int) mario.getX()) {
+                    if ((marioInitialPosX + (i * pipe1.getWidth())) == (int) mario.getX()) {
                         jumpsMade++;
                         stop = true;
                         onPipe = true;
