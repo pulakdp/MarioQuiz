@@ -57,6 +57,7 @@ public class GameActivity extends AppCompatActivity {
 
     boolean stop = false;
     boolean onPipe = true;
+    boolean worldShifting = false;
 
     private QuestionsApiInterface apiClient;
     private List<Question> questions;
@@ -73,7 +74,6 @@ public class GameActivity extends AppCompatActivity {
     private Button retry;
     private Button quit;
     private Group group;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -216,10 +216,12 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void userClicked() {
-        if (jumpsMade < 3 && onPipe) {
-            onPipe = false;
-            stop = false;
-            jump();
+        if (!worldShifting) {
+            if (jumpsMade < 3 && onPipe) {
+                onPipe = false;
+                stop = false;
+                jump();
+            }
         }
     }
 
@@ -291,6 +293,8 @@ public class GameActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
+                worldShifting = true;
+
                 mario.setX(mario.getX() - speedX);
                 pipe1.setX(pipe1.getX() - speedX);
                 pipe2.setX(pipe2.getX() - speedX);
@@ -315,6 +319,7 @@ public class GameActivity extends AppCompatActivity {
 
                 if (counter == rightPipe) {
                     handler.removeCallbacks(this);
+                    worldShifting = false;
                     reset();
                     showQuestion();
                 } else
