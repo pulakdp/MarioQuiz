@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">MarioQuiz</string>
+    <string name="question_number">%1$d/%2$d</string>
+    <string name="no_internet">Oops! No internet!</string>
+    <string name="could_not_fetch_questions">Couldn\'t fetch questions</string>
+    <string name="game_over">Game Over!</string>
+    <string name="win_message">Game over! You won!</string>
+    <string name="time_up">Time\'s Up!</string>
+</resources>
