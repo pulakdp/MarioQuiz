@@ -69,6 +69,7 @@ public class GameActivity extends AppCompatActivity {
     int rightPipe = 0;
     int counter = 0;
     boolean gameOverAnimDone = false;
+    boolean gameOver = false;
     boolean pauseTimer = false;
 
     private Button retry;
@@ -96,21 +97,27 @@ public class GameActivity extends AppCompatActivity {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             layout.setOnClickListener(view1 -> userClicked());
             group.setVisibility(View.GONE);
-            stop = false;
-            onPipe = true;
-            pauseTimer = false;
-            timeInSeconds = totalTime;
-            currentQuestion = 1;
-            jumpsMade = 0;
-            rightPipe = 0;
-            counter = 0;
-            gameOverAnimDone = false;
+            assignDefaultValues();
             mario.setX(marioInitialPosX);
             mario.setY(getScreenHeight() - pipe1.getHeight() - mario.getHeight());
 
             start();
         });
         quit.setOnClickListener(view -> finish());
+    }
+
+    private void assignDefaultValues() {
+        stop = false;
+        onPipe = true;
+        pauseTimer = false;
+        gameOver = false;
+        worldShifting = false;
+        timeInSeconds = totalTime;
+        currentQuestion = 1;
+        jumpsMade = 0;
+        rightPipe = 0;
+        counter = 0;
+        gameOverAnimDone = false;
     }
 
     @Override
@@ -216,12 +223,10 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void userClicked() {
-        if (!worldShifting) {
-            if (jumpsMade < 3 && onPipe) {
-                onPipe = false;
-                stop = false;
-                jump();
-            }
+        if (!worldShifting && !gameOver && jumpsMade < 3 && onPipe) {
+            onPipe = false;
+            stop = false;
+            jump();
         }
     }
 
@@ -274,6 +279,7 @@ public class GameActivity extends AppCompatActivity {
             if (jumpsMade == rightPipe) {
                 if (currentQuestion == 10) {
                     pauseTimer = true;
+                    gameOver = true;
                     Toast.makeText(getApplicationContext(), R.string.win_message, Toast.LENGTH_SHORT).show();
                     group.setVisibility(View.VISIBLE);
                     return;
@@ -281,6 +287,7 @@ public class GameActivity extends AppCompatActivity {
                 shiftWorldAndLoadNextQuestion(rightPipe);
             } else {
                 pauseTimer = true;
+                gameOver = true;
                 startGameOverAnimation();
             }
         }, 800);
@@ -371,7 +378,7 @@ public class GameActivity extends AppCompatActivity {
                     remainingTime.setText(String.format(Locale.getDefault(), "%ds", timeInSeconds));
                 if (!pauseTimer && timeInSeconds > 0)
                     handler.postDelayed(this, 1000);
-                else if (timeInSeconds <= 0){
+                else if (timeInSeconds <= 0) {
                     handler.removeCallbacks(this);
                     Toast.makeText(getApplicationContext(), R.string.time_up, Toast.LENGTH_SHORT).show();
                     group.setVisibility(View.VISIBLE);
