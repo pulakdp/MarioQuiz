@@ -76,6 +76,9 @@ public class GameActivity extends AppCompatActivity {
     private Button quit;
     private Group group;
 
+    private Handler answerCheckingHandler;
+    private Runnable answerCheckingRunnable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,6 +107,41 @@ public class GameActivity extends AppCompatActivity {
             start();
         });
         quit.setOnClickListener(view -> finish());
+
+        initAnCheckComponents();
+    }
+
+    private void initAnCheckComponents() {
+        answerCheckingHandler = new Handler();
+        answerCheckingRunnable = () -> {
+            if (!stop || !onPipe || worldShifting) {
+                return;
+            }
+            if (rightPipe == -1) {
+                Log.d(LOG_TAG, "Oops!");
+                return;
+            }
+            question.setText("");
+            option1.setText("");
+            option2.setText("");
+            option3.setText("");
+            if (onPipe && (jumpsMade == rightPipe)) {
+                if (currentQuestion == 10) {
+                    pauseTimer = true;
+                    gameOver = true;
+                    Toast.makeText(getApplicationContext(), R.string.win_message, Toast.LENGTH_SHORT).show();
+                    group.setVisibility(View.VISIBLE);
+                    return;
+                }
+                stop = true;
+                worldShifting = true;
+                shiftWorldAndLoadNextQuestion(rightPipe);
+            } else {
+                pauseTimer = true;
+                gameOver = true;
+                startGameOverAnimation();
+            }
+        };
     }
 
     private void assignDefaultValues() {
@@ -231,6 +269,8 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void jump() {
+        onPipe = false;
+        stop = false;
         speedY = -12f;
         Handler handler = new Handler();
         Runnable runnable = new Runnable() {
@@ -242,19 +282,26 @@ public class GameActivity extends AppCompatActivity {
                 mario.setY(mario.getY() + speedY);
 
                 for (int i = 1; i < 4; i++) {
+                    if (onPipe)
+                        break;
+
                     if ((marioInitialPosX + (i * pipe1.getWidth())) == (int) mario.getX()) {
-                        jumpsMade++;
+                        jumpsMade += 1;
+                        Log.d(LOG_TAG, "Stared checking. Jumps = " + jumpsMade);
                         stop = true;
                         onPipe = true;
                         startDelayedAnswerCheck();
+                        break;
                     }
                 }
 
                 if (!stop) {
+                    onPipe = false;
                     mario.setImageResource(R.drawable.mario_jumping);
                     mario.setScaleType(ImageView.ScaleType.FIT_XY);
                     handler.postDelayed(this, 25);
                 } else {
+                    onPipe = true;
                     mario.setImageResource(R.drawable.mario_standing);
                     handler.removeCallbacks(this);
                 }
@@ -264,34 +311,8 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void startDelayedAnswerCheck() {
-        new Handler().postDelayed(() -> {
-            if (!stop || !onPipe) {
-                return;
-            }
-            if (rightPipe == -1) {
-                Log.d(LOG_TAG, "Oops!");
-                return;
-            }
-            question.setText("");
-            option1.setText("");
-            option2.setText("");
-            option3.setText("");
-            if (jumpsMade == rightPipe) {
-                if (currentQuestion == 10) {
-                    pauseTimer = true;
-                    gameOver = true;
-                    Toast.makeText(getApplicationContext(), R.string.win_message, Toast.LENGTH_SHORT).show();
-                    group.setVisibility(View.VISIBLE);
-                    return;
-                }
-                shiftWorldAndLoadNextQuestion(rightPipe);
-            } else {
-                pauseTimer = true;
-                gameOver = true;
-                startGameOverAnimation();
-            }
-        }, 800);
-
+        answerCheckingHandler.removeCallbacksAndMessages(null);
+        answerCheckingHandler.postDelayed(answerCheckingRunnable, 1000);
     }
 
     private void shiftWorldAndLoadNextQuestion(int rightPipe) {
@@ -300,8 +321,6 @@ public class GameActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                worldShifting = true;
-
                 mario.setX(mario.getX() - speedX);
                 pipe1.setX(pipe1.getX() - speedX);
                 pipe2.setX(pipe2.getX() - speedX);
@@ -329,8 +348,10 @@ public class GameActivity extends AppCompatActivity {
                     worldShifting = false;
                     reset();
                     showQuestion();
-                } else
+                } else {
+                    worldShifting = true;
                     handler.postDelayed(this, 25);
+                }
             }
         };
         handler.post(runnable);
@@ -344,6 +365,7 @@ public class GameActivity extends AppCompatActivity {
         stop = false;
         rightPipe = 0;
         gameOverAnimDone = false;
+        mario.setY(getScreenHeight() - pipe1.getHeight() - mario.getHeight());
     }
 
     private void startGameOverAnimation() {
@@ -352,6 +374,7 @@ public class GameActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
+                onPipe = false;
                 layout.setOnClickListener(null);
                 speedY += gravity;
                 mario.setY(mario.getY() + speedY);
